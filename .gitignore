@@ -6,3 +6,4 @@ config.json
 **/.ropeproject
 database/data
 .coverage
+tvm/
