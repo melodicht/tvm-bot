@@ -11,6 +11,8 @@ from godfather.cogs.mafia.checks import *  # pylint: disable=wildcard-import
 from godfather.utils import get_random_sequence, from_now, confirm
 from godfather.errors import PhaseChangeError
 
+from godfather.text_manager import TextManager
+
 
 class Mafia(commands.Cog):
     def __init__(self, bot):
@@ -135,13 +137,16 @@ class Mafia(commands.Cog):
             roleset = ctx.bot.games[ctx.guild.id].setup['name']
 
         rolesets = json.load(open('rolesets/rolesets.json'))
+
+        def roles_info_generator():
+            for _roleset in rolesets:
+                yield f'{_roleset["name"]} ({len(_roleset["roles"])} players)'
+
         if roleset is None or roleset == 'all':
             txt = ('**All available setups:** (to view a specific setup, use '
                    f'{ctx.prefix}setupinfo <name>)')
-            txt += '```\n'
-            for _roleset in rolesets:
-                txt += f'{_roleset["name"]} ({len(_roleset["roles"])} players)\n'
-            txt += '```'
+            txt += TextManager.compile_lines(roles_info_generator,
+                                             codeblock=True)
             return await ctx.send(txt)
 
         found_setup = next(
