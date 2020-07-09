@@ -11,8 +11,6 @@ from godfather.cogs.mafia.checks import *  # pylint: disable=wildcard-import
 from godfather.utils import get_random_sequence, from_now, confirm
 from godfather.errors import PhaseChangeError
 
-from godfather.text_manager import TextManager
-
 
 class Mafia(commands.Cog):
     def __init__(self, bot):
