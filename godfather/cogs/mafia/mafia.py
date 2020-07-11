@@ -12,6 +12,8 @@ from godfather.cogs.mafia.checks import *  # pylint: disable=wildcard-import
 from godfather.utils import get_random_sequence, from_now, confirm
 from godfather.errors import PhaseChangeError
 
+from godfather.utils.text_manager import TextManager
+
 
 class Mafia(commands.Cog):
     def __init__(self, bot):
@@ -137,16 +139,16 @@ class Mafia(commands.Cog):
 
         rolesets = json.load(open('rolesets/rolesets.json'))
 
-        def roles_info_generator():
-            for _roleset in rolesets:
-                yield f'{_roleset["name"]} ({len(_roleset["roles"])} players)'
-
         if roleset is None or roleset == 'all':
-            txt = ('**All available setups:** (to view a specific setup, use '
-                   f'{ctx.prefix}setupinfo <name>)')
-            txt += TextManager.compile_lines(roles_info_generator,
-                                             codeblock=True)
-            return await ctx.send(txt)
+            return await TextManager.send_msg_blocks(
+                ctx,
+                *[
+                    (('**All available setups:** (to view a specific setup, '
+                     f'use {ctx.prefix}setupinfo <name>)'), False),
+                    ((f'{rs["name"]} ({len(rs["roles"])} players)'
+                     for rs in rolesets), True)
+                ]
+            )
 
         found_setup = next(
             (rs for rs in rolesets if rs['name'] == roleset.lower()), None)
@@ -155,12 +157,15 @@ class Mafia(commands.Cog):
                 f"Couldn't find {roleset}, use {ctx.prefix}setupinfo to view all setups."
             )
 
-        txt = [f'**{roleset}** ({len(found_setup["roles"])} players)', '```\n']
-        for i, role in enumerate(found_setup['roles']):
-            txt.append(
-                f'{i+1}. {role["faction"].title()} {role["id"].title()}')
-        txt.append('```')
-        await ctx.send('\n'.join(txt))
+        await TextManager.send_msg_blocks(
+            ctx,
+            *[
+                (f'**{roleset}** ({len(found_setup["roles"])} players)',
+                 False),
+                ((f'{i}. {role["faction"].title()} {role["id"].title()}'
+                 for i, role in enumerate(found_setup['roles'], 1)), True)
+            ]
+        )
 
     @commands.command()
     async def roleinfo(self, ctx: commands.Context, *, rolename: typing.Optional[str] = None):
@@ -171,7 +176,8 @@ class Mafia(commands.Cog):
             role = role()  # initialize the class
             if role.name.lower() == rolename.lower():
                 if role.__doc__ is None:
-                    return await ctx.send('No documentation on {} available.'.format(rolename))
+                    return await ctx.send(f'No documentation on {=rolename}'
+                                          'available.')
                 text = [f'**{role.name}**', '```diff']
                 text.append(inspect.getdoc(role))
                 text.append('```')
